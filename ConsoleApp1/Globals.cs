@@ -5,4 +5,5 @@
     public static int monitor = 0;
     public static string command = "";
     public static bool iscommand = false;
+    public static bool run = true;
 }

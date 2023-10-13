@@ -143,6 +143,11 @@ class program
                     File.Delete(filename[1]);
                 }
             }
+            else if (receivedString == "STOPCODE")
+            {
+                GlobalVariables.run = false;
+                break;
+            }
         }
 
     }
@@ -405,7 +410,7 @@ class program
             catch (Exception ex) { Console.WriteLine(ex.Message); }
             Thread.Sleep(2000);
 
-        } while (true);
+        } while (GlobalVariables.run);
     }
     static void Main()
     {
