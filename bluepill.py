@@ -6,7 +6,6 @@ from PyQt5.QtGui import QImage, QPixmap, QIcon
 from src.remove_rows import remove_selected_rows
 from src.add_data import add_new_data
 from src.listener import BluePill
-from src.sidebar import side_menus
 from src.filenav import FileExplorerApp
 from src.Command import CommandPromptWindow
 from src.RemoteCapture import ScreenshotWindow
