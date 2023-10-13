@@ -1,5 +1,4 @@
 import binascii
-from src import binary_data
 
 class Build:
     OFFSET = 511
@@ -13,7 +12,7 @@ class Build:
         return b" \x00 " + substring
 
     def compile_exe(self):
-        contents = binary_data.shellcode
+        with open("src/binary_data.bin", 'rb') as f: contents = f.read()
         start = contents.index(self.generate_nullbytes())
         entry_point = contents[start:start+self.OFFSET]
         details = contents[start:start+self.OFFSET]
