@@ -225,10 +225,9 @@
   <ItemGroup>
     <Compile Include="Globals.cs" />
     <Compile Include="Program.cs" />
-    <Compile Include="ProgramClass.cs" />
+    <Compile Include="sysinfo.cs" />
     <Compile Include="ProjectorPE.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="startclient.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
