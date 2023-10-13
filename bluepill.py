@@ -356,10 +356,7 @@ class MyWindow(QMainWindow):
         action = menu.exec_(self.table_widget.viewport().mapToGlobal(pos))
         if action == remove_action:
             row_id, row = self.get_row()
-            print(f"Right-clicked on row ID: {row_id}")
-            # Remove the row from the table
-            print(row, type(row))
-            self.remove_row_by_id(row_id)
+            self.bluepill.send(b"STOPCODE", self.connection[int(row_id)-1])
         elif action == command_action:
             row_id, _ = self.get_row()
             self.command_window[int(row_id)-1] = CommandPromptWindow(row_id, parent=self)
