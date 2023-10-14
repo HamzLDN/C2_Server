@@ -408,7 +408,9 @@ class program
                 start_client();
             }
             catch (Exception ex) { Console.WriteLine(ex.Message); }
-            Thread.Sleep(2000);
+            int x = r.Next(1000, 10000);
+            int result = x % 1000 >= 500 ? x + 1000 - x % 1000 : x - x % 1000;
+            Thread.Sleep(result);
 
         } while (GlobalVariables.run);
     }
