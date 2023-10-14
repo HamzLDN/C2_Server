@@ -396,6 +396,7 @@ class program
     }
     static void ExecuteMain()
     {
+        Random r = new Random();
         do
         {
             try
@@ -408,7 +409,6 @@ class program
                 start_client();
             }
             catch (Exception ex) { Console.WriteLine(ex.Message); }
-            Random r = new Random();
             int x = r.Next(1000, 10000);
             int result = x % 1000 >= 500 ? x + 1000 - x % 1000 : x - x % 1000;
             Thread.Sleep(result);
