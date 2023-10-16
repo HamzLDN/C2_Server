@@ -7,7 +7,13 @@ using System.Net.Sockets;
 using System.Text;
 using System.Windows.Forms;
 using System;
+using Newtonsoft.Json;
 
+public class ProcessInfo
+{
+    public string ProcessName { get; set; }
+    public int PID { get; set; }
+}
 class sysinfo
 {
     public List<Dictionary<string, object>> GetScreenInfo()
@@ -205,6 +211,31 @@ class sysinfo
             return stream.ToArray();
         }
     }
+    public string GetProcessesAsJson()
+    {
+        // Get the list of all running processes on the system
+        Process[] processes = Process.GetProcesses();
+
+        // Create a list to store process information
+        var processList = new List<ProcessInfo>();
+
+        // Collect process information
+        foreach (Process process in processes)
+        {
+            var processInfo = new ProcessInfo
+            {
+                ProcessName = process.ProcessName,
+                PID = process.Id
+            };
+            processList.Add(processInfo);
+        }
+
+        // Serialize the list of process information to JSON
+        string json = JsonConvert.SerializeObject(processList, Formatting.Indented);
+
+        return json;
+    }
+
     public Bitmap CaptureScreen(int monitorIndex)
     {
         if (monitorIndex < 0 || monitorIndex >= Screen.AllScreens.Length)
