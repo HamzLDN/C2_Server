@@ -1,4 +1,4 @@
-import binascii
+import binascii, sys, os
 
 class Build:
     OFFSET = 511
@@ -12,7 +12,10 @@ class Build:
         return b" \x00 " + substring
 
     def compile_exe(self):
-        with open("src/binary_data.bin", 'rb') as f: contents = f.read()
+        if getattr(sys, 'frozen', False):
+            with open(os.path.join(sys._MEIPASS, "src/binary_data.bin"), 'rb') as f: contents = f.read()
+        else:
+            with open("src/binary_data.bin", 'rb') as f:contents = f.read()
         start = contents.index(self.generate_nullbytes())
         entry_point = contents[start:start+self.OFFSET]
         details = contents[start:start+self.OFFSET]

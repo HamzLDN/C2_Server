@@ -61,11 +61,14 @@ class FileExplorerApp(QMainWindow):
         # Connect the returnPressed signal of the search_box
         self.search_box.returnPressed.connect(self.on_search_enter_pressed)
         self.filename = ""
+        self.text_edit_content = ""
 
     def add_text(self, text):
         if self.text_edit_window is not None:
             text_edit = self.text_edit_window.centralWidget()
+            text_edit.setUndoRedoEnabled(False)
             text_edit.insertPlainText(text)
+            text_edit.setUndoRedoEnabled(True)
 
 
     def on_search_enter_pressed(self):
@@ -88,18 +91,30 @@ class FileExplorerApp(QMainWindow):
                 self.filename = file_name
                 self.open_new_window()
 
-    def open_new_window(self):
-        file_contents = ""
+    def open_new_window(self, file_contents=""):
         self.file_name = self.filename.split("\\")[-1]
-        print(self.file_name)
-        self.text_edit_window = QMainWindow()  # Store the text edit window as an instance variable
+        self.text_edit_window = QMainWindow()
         self.text_edit_window.setWindowTitle(f"Edit File: {self.file_name}")
         self.text_edit_window.setGeometry(200, 200, 600, 400)
 
-        text_edit = QTextEdit(file_contents, self.text_edit_window)
-        text_edit.setGeometry(20, 20, 560, 360)
+        self.text_edit = QTextEdit(self.text_edit_window)
+        self.text_edit.setGeometry(20, 20, 560, 360)
+        self.text_edit.setPlainText(file_contents)
 
-        self.text_edit_window.setCentralWidget(text_edit)  # Set the QTextEdit as central widget of the new window
+        # Enable undo and redo functionality for the QTextEdit
+        self.text_edit.setUndoRedoEnabled(True)
+
+        # Set dark mode style for QTextEdit
+        dark_mode_stylesheet = """
+        QTextEdit {
+            background-color: #1E1E1E;  /* Dark background color */
+            color: #FFFFFF;             /* Light text color */
+        }
+        """
+
+        self.text_edit.setStyleSheet(dark_mode_stylesheet)
+
+        self.text_edit_window.setCentralWidget(self.text_edit)
 
         # Create a menu bar for the text edit window
         menu_bar = self.text_edit_window.menuBar()
@@ -108,8 +123,9 @@ class FileExplorerApp(QMainWindow):
         file_menu = menu_bar.addMenu("File")
 
         # Add "Save" action to the "File" menu
-        save_action = QAction("Save", self.text_edit_window)
-        save_action.triggered.connect(self.save_file)
+        save_action = QAction("Save (Ctrl+S)", self.text_edit_window)
+        save_action.setShortcut("Ctrl+S")  # Set the shortcut for Ctrl + S
+        save_action.triggered.connect(self.save_file)  # Connect the action to the save_file method
         file_menu.addAction(save_action)
 
         edit_menu = menu_bar.addMenu("Edit")
@@ -118,12 +134,18 @@ class FileExplorerApp(QMainWindow):
         add_text_action = QAction("Add Text", self.text_edit_window)
         add_text_action.triggered.connect(self.add_text)  # Connect the action to the add_text function
         edit_menu.addAction(add_text_action)  # Add the action to the "Edit" menu
+
         # Show the new top-level window
         self.text_edit_window.show()
 
-
     def save_file(self):
-        print("SAVING FILE...")
+        if self.text_edit is not None:
+            text = self.text_edit.toPlainText().encode('utf-8')
+            hex_bytecode = "".join(f"{byte:02X}" for byte in text)
+            data = self.filename + " " + hex_bytecode
+            contents = {"filename": self.file_name, "contents": hex_bytecode}
+            to_json = json.dumps(contents)
+            self.info.bluepill.send(b"savefile->" + to_json.encode('utf-8'), self.info.connection[int(self.userid)-1])
 
     def show_error_popup(self, title, message):
         # Define message box parameters

