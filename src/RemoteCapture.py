@@ -131,7 +131,7 @@ class ScreenshotWindow(QWidget):
         self.screenshot_thread = threading.Thread(target=self.update_screenshot_thread)
         self.screenshot_thread.start()
 
-        self.setWindowTitle(str(self.window))
+        self.setWindowTitle("Remote Desktop: " + str(self.window + 1))
         self.setMinimumSize(960 + self.offset, 540 + self.offset)
         self.next_monitor_button.clicked.connect(self.handle_next_monitor_click)
         self.previous_monitor_button.clicked.connect(self.handle_previous_monitor_click)

@@ -103,7 +103,7 @@ class BluePill:
                 elif data.startswith(b"pids->"):
                     processes = data.split(b"pids->")[1]
                     procids = json.loads(processes)
-                    print(procids)
+                    self.my_window.process_manager[int(client_id)-1].addpid(procids)
             except Exception as e:
                 print(e, "RECV_TC_DATA")
                 break

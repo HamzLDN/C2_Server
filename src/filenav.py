@@ -19,6 +19,7 @@ class TextUpdater(QObject):
         for i in range(0, len(text), n):
             chunk = text[i:i + n]
             self.update_signal.emit(chunk)
+            
 class FileExplorerApp(QMainWindow):
     def __init__(self, window_name, parent=None):
         super().__init__()
