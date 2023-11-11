@@ -57,8 +57,9 @@ class AddItemDialog(QDialog):
         port = self.port_input.text()
         return ip, port
 class BuilderWindow(QMainWindow):
-    def __init__(self, parent):
-        super(BuilderWindow, self).__init__(parent)
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
         self.info = parent
         self.setWindowTitle('Builder Window')
         self.setGeometry(200, 200, 800, 600)
@@ -179,9 +180,6 @@ class BuilderWindow(QMainWindow):
         msg_box.setText(message)
         msg_box.exec_()
 
-def quit_app():
-    print("EXITED")
-    app.quit()
 class ImageLabelUpdateEvent(QEvent):
     def __init__(self, pixmap):
         super().__init__(QEvent.User)
@@ -212,6 +210,7 @@ class MyWindow(QMainWindow):
         self.command_window = []
         self.file_explorer = []
         self.process_manager = []
+        self.child_windows = []
         self.listening_connections = []
         # Set window properties
         dark_stylesheet = """
@@ -228,7 +227,6 @@ class MyWindow(QMainWindow):
                 background-color: #777;
             }
         """
-        app.aboutToQuit.connect(quit_app)
         QApplication.setStyle('Fusion')
         self.setStyleSheet(dark_stylesheet)
         self.setWindowTitle("BluePill C2 Framework")
@@ -333,10 +331,27 @@ class MyWindow(QMainWindow):
         self.remove_icon = b'iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeBAMAAADJHrORAAAAJFBMVEXRAABHcEzRAADRAADRAADRAADRAADRAADRAADRAADRAADRAAAVPsrJAAAAC3RSTlMfALrAtBjsAjFgYpSAdqIAAADOSURBVBjTYxBEBQyE+eKtUHZEIZgvmcII5gq4TQTxxaftdgDzmXZnFgL5Etm7N4EUCGjv3tYI5Itq796tAJbevSkQpB/EYBQUsAYLM4AV7jYQZN69ewsjxH6W3bs3MwClHaDuEfDevdsYIg1xH1ABELjC3SsKVLB7SyDC/SEwaSgfaCXYDVC+AFg9oyCqeQ6COOwDSm9i0Ia7ByStADIS6l4WiH8gChjAjoH6d0sgJDw2I4cHMLwMoI7KAoWXoFQyJDwL1BZiDW/BQhLiCwDVVWOoPYoEwgAAAABJRU5ErkJggg=='
         self.remote_icon = b'iVBORw0KGgoAAAANSUhEUgAAAB4AAAAbCAMAAABcI88jAAAAS1BMVEX///9UVFTS0tISEhL9/f0DAwP7+/sAAABLS0sGBgZra2sMDAyNjY0dHR3e3t6ysrKampqBgYH5+fk0NDRoaGg5OTnKyso9PT1kZGQI95hjAAAA2UlEQVQoz3XT4XaDIAwF4MgiAQMitLN9/yddGC2VLdw/HvwOiHgF4/w6iXcGHM2zLsAUl0kiMXhyBe0laNsYiyP/y3ANHrndUNkevGY7YwxMHFBh7GqVxUs4ABITZYT/jHnlA8yNyO0aB0/Vv7v/WTx3fxZta5mIk3g8tffe5fhvRq5GeXZXeG185PJ8ac84O8VRO7dDgnMfFGzjx2nUnA/hSP5rEk8R5BtMwwFK2u5byz3WfsX3cNvS2ISlTlksaMFaLolUDxVOtZoSKW5SOHy2FFR+/x0X/gGpPhCR8haLwwAAAABJRU5ErkJggg=='
 
-    def exit_application(self):
-        for apps in self.file_explorer:
-            try: apps.close()
-            except: pass
+    # def exit_application(self):
+    #     print("OK")
+    #     for file_explorer in self.file_explorer:
+    #         try: file_explorer.close()
+    #         except: pass
+    #     for command in self.command_window:
+    #         try: file_explorer.close()
+    #         except: pass
+    #     print("DESTROYED")
+
+    def closeEvent(self, event):
+        # Override the closeEvent to handle the window close button
+        reply = QMessageBox.question(self, 'Message', 'Are you sure you want to quit?', 
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            event.accept()
+            for child in self.process_manager + self.command_window + self.file_explorer:
+                child.close()
+            QApplication.quit()
+        else:
+            event.ignore()
     def start_bluepill_server(self):
         # Create a thread to run the initiate_server method
         server_thread = threading.Thread(target=self.bluepill.initiate_server, args=('0.0.0.0', 8080))
@@ -394,11 +409,11 @@ class MyWindow(QMainWindow):
             self.process_manager[int(row_id)-1] = ProcessList(str(row_id))
             self.process_manager[int(row_id)-1].show()
             
+            
     def openBuilderWindow(self):
         builder_window = BuilderWindow(self)
         builder_window.show()
 if __name__ == '__main__':
-    global app
     app = QApplication(sys.argv)
     window = MyWindow()
     window.show()

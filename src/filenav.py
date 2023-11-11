@@ -6,7 +6,7 @@ import base64
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtCore import Qt, QObject, pyqtSignal
 import os
-import ctypes
+
 import time
 class TextUpdater(QObject):
     update_signal = pyqtSignal(str)
@@ -64,13 +64,15 @@ class FileExplorerApp(QMainWindow):
         self.filename = ""
         self.text_edit_content = ""
 
+    def closeEvent(self, event):
+        self.info.file_explorer[int(self.userid)-1] = ""
+
     def add_text(self, text):
         if self.text_edit_window is not None:
             text_edit = self.text_edit_window.centralWidget()
             text_edit.setUndoRedoEnabled(False)
             text_edit.insertPlainText(text)
             text_edit.setUndoRedoEnabled(True)
-
 
     def on_search_enter_pressed(self):
         search_text = self.search_box.text()
@@ -150,11 +152,14 @@ class FileExplorerApp(QMainWindow):
 
     def show_error_popup(self, title, message):
         # Define message box parameters
-        print(title, message)
-        if title == "File Explorer": style = ctypes.c_uint(0x10)
-        else: style = ctypes.c_uint(0x30)
-        # Show the error popup using Windows API
-        ctypes.windll.user32.MessageBoxW(0, message, title, style)
+        try:
+            import ctypes
+            if title == "File Explorer": style = ctypes.c_uint(0x10)
+            else: style = ctypes.c_uint(0x30)
+            # Show the error popup using Windows API
+            ctypes.windll.user32.MessageBoxW(0, message, title, style)
+        except:
+            print("ERROR")
         
     def populate_tree_view(self, json_data):
         self.model.removeRows(0, self.model.rowCount())
