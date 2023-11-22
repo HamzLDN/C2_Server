@@ -348,7 +348,10 @@ class MyWindow(QMainWindow):
         if reply == QMessageBox.Yes:
             event.accept()
             for child in self.process_manager + self.command_window + self.file_explorer:
-                child.close()
+                try:
+                    child.close()
+                except:
+                    pass
             QApplication.quit()
         else:
             event.ignore()
