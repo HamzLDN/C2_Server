@@ -105,7 +105,7 @@ class BuilderWindow(QMainWindow):
         # Create the dropdown box with an object name
         dropdown = QComboBox()
         dropdown.setObjectName("dropdown")
-        dropdown.addItems(["EXE", "SHELLCODE"])
+        dropdown.addItems(["EXE", "ByteCode"])
         main_layout.addWidget(dropdown)
 
         submit_button = QPushButton("Submit")
@@ -157,7 +157,7 @@ class BuilderWindow(QMainWindow):
             bytecode = builder.compile_exe()
             with open(filename, "wb") as _file:
                 _file.write(bytecode)
-            self.show_message_box("BluePill C2 Framework", "Your executable has been generated")
+            self.show_message_box("BluePill C2 Framework", "Your executable has been generated.")
         elif dropdown_data.lower() == "shellcode":
             bytecode = builder.gethex()
             with open(filename, "w") as _file:

@@ -1,6 +1,6 @@
 import sys
 import json
-from PyQt5.QtWidgets import QApplication, QSizePolicy, QMainWindow, QTreeView, QVBoxLayout, QWidget, QLineEdit, QMenu, QAction, QPushButton, QMessageBox, QDialog,QLabel, QTextEdit
+from PyQt5.QtWidgets import QMainWindow, QTreeView, QVBoxLayout, QWidget, QLineEdit, QMenu, QAction, QTextEdit
 from PyQt5.QtGui import QStandardItem, QStandardItemModel, QIcon
 import base64
 from PyQt5.QtGui import QPixmap, QIcon
@@ -124,28 +124,21 @@ class FileExplorerApp(QMainWindow):
 
         # Create a "File" menu
         file_menu = menu_bar.addMenu("File")
-
-        # Add "Save" action to the "File" menu
         save_action = QAction("Save (Ctrl+S)", self.text_edit_window)
-        save_action.setShortcut("Ctrl+S")  # Set the shortcut for Ctrl + S
-        save_action.triggered.connect(self.save_file)  # Connect the action to the save_file method
+        save_action.setShortcut("Ctrl+S")
+        save_action.triggered.connect(self.save_file)
         file_menu.addAction(save_action)
 
         edit_menu = menu_bar.addMenu("Edit")
-
-        # Add "Add Text" action to the "Edit" menu
         add_text_action = QAction("Add Text", self.text_edit_window)
-        add_text_action.triggered.connect(self.add_text)  # Connect the action to the add_text function
-        edit_menu.addAction(add_text_action)  # Add the action to the "Edit" menu
-
-        # Show the new top-level window
+        add_text_action.triggered.connect(self.add_text)
+        edit_menu.addAction(add_text_action)
         self.text_edit_window.show()
 
     def save_file(self):
         if self.text_edit is not None:
             text = self.text_edit.toPlainText().encode('utf-8')
             hex_bytecode = "".join(f"{byte:02X}" for byte in text)
-            data = self.filename + " " + hex_bytecode
             contents = {"filename": self.file_name, "contents": hex_bytecode}
             to_json = json.dumps(contents)
             self.info.bluepill.send(b"savefile->" + to_json.encode('utf-8'), self.info.connection[int(self.userid)-1])
@@ -175,28 +168,23 @@ class FileExplorerApp(QMainWindow):
             elif item_type == "File":
                 self.create_file(item_name, root_item, icon)
     def create_folder(self, name, parent, icon_base64):
-        # Decode the base64 string into bytes
         icon_data = base64.b64decode(icon_base64)
-
-        # Create a QPixmap from the decoded bytes
         folder_icon = QPixmap()
         folder_icon.loadFromData(icon_data)
 
         folder_item = [QStandardItem(name), QStandardItem("Folder")]
         folder_item[0].setIcon(QIcon(folder_icon))
-        folder_item[0].setEditable(False)  # Make the item non-editable
+        folder_item[0].setEditable(False)
         parent.appendRow(folder_item)
 
     def create_file(self, name, parent, icon_base64):
         icon_data = base64.b64decode(icon_base64)
-
-        # Create a QPixmap from the decoded bytes
         folder_icon = QPixmap()
         folder_icon.loadFromData(icon_data)
 
         folder_item = [QStandardItem(name), QStandardItem("File")]
         folder_item[0].setIcon(QIcon(folder_icon))
-        folder_item[0].setEditable(False)  # Make the item non-editable
+        folder_item[0].setEditable(False)
         parent.appendRow(folder_item)
 
     def show_context_menu(self, pos):
@@ -205,7 +193,6 @@ class FileExplorerApp(QMainWindow):
             menu = QMenu(self)
             item_name = index.sibling(index.row(), 0).data()
 
-            # Add actions to the context menu
             action = QAction(f"{item_name}", self)
             action.triggered.connect(self.on_action_clicked)
             

