@@ -46,30 +46,31 @@ class CustomQLabel(QLabel):
         else: 
             if text: self.info.my_window.bluepill.send(b"keyboard->" + str(text).encode('utf-8'), self.info.my_window.connection[int(self.info.window) - 1])
     def mouseMoveEvent(self, event: QMouseEvent):
-        label = self.info.image_label
-        original_width = label.pixmap().width() - 1
-        original_height = label.pixmap().height() - 1
-        x = event.x()
-        y = event.y()
-        dimention = self.display[self.info.monitor]['size']
-        target_width = dimention['Item1']
-        target_height = dimention['Item2']
-        x_scale = target_width / original_width
-        y_scale = target_height / original_height
-        new_x = int(x * x_scale) + self.get_pos()
-        new_y = int(y * y_scale) + int(self.display[self.info.monitor]['position']['Item2'])
-        self.info.my_window.bluepill.send(b"mouse->" + (str(new_x) + " " + str(new_y)).encode('utf-8'), self.info.my_window.connection[self.info.window])
-        self.position = 0
+        if self.info.mouseactive:
+            label = self.info.image_label
+            original_width = label.pixmap().width() - 1
+            original_height = label.pixmap().height() - 1
+            x = event.x()
+            y = event.y()
+            dimention = self.display[self.info.monitor]['size']
+            target_width = dimention['Item1']
+            target_height = dimention['Item2']
+            x_scale = target_width / original_width
+            y_scale = target_height / original_height
+            new_x = int(x * x_scale) + self.get_pos()
+            new_y = int(y * y_scale) + int(self.display[self.info.monitor]['position']['Item2'])
+            self.info.my_window.bluepill.send(b"mouse->" + (str(new_x) + " " + str(new_y)).encode('utf-8'), self.info.my_window.connection[self.info.window])
+            self.position = 0
+
     def get_pos(self) -> int:
-        for i in range(self.info.monitor):
-            self.position += self.display[i]['resolution']['Item1']
+        for i in range(self.info.monitor): self.position += self.display[i]['resolution']['Item1']
         return self.position
     
     def mousePressEvent(self, event: QMouseEvent):
-        self.info.my_window.bluepill.send(b"input->" + str(event.button()).encode('utf-8'), self.info.my_window.connection[self.info.window])
+        if self.info.mouseactive: self.info.my_window.bluepill.send(b"input->" + str(event.button()).encode('utf-8'), self.info.my_window.connection[self.info.window])
         
     def mouseReleaseEvent(self, event: QMouseEvent):
-        self.info.my_window.bluepill.send(b"input->" + str(event.button()).encode('utf-8'), self.info.my_window.connection[self.info.window])
+        if self.info.mouseactive: self.info.my_window.bluepill.send(b"input->" + str(event.button()).encode('utf-8'), self.info.my_window.connection[self.info.window])
 
 class ScreenshotWindow(QWidget):
     def __init__(self, window_name: str, display: dict, parent=None):
@@ -77,7 +78,7 @@ class ScreenshotWindow(QWidget):
         self.display_data = display
         self.my_window = parent
         self.active_stream = True
-        
+        self.mouseactive = False
         self.monitor = 0
         super().__init__()
         self.initUI()
@@ -98,39 +99,27 @@ class ScreenshotWindow(QWidget):
         self.number_spinner = QSpinBox(self)
         self.number_spinner.setMinimum(1)  # Set minimum value
         self.number_spinner.setMaximum(100)  # Set maximum value
-        input_layout.addWidget(self.number_spinner)
+        
 
         # Create a QPushButton
+        self.userinput = QPushButton("Control Desktop", self)
+        input_layout.addWidget(self.userinput)
         self.button = QPushButton("Quality", self)
         input_layout.addWidget(self.button)
-
-        # Add a "Next Monitor" button
-        
+        input_layout.addWidget(self.number_spinner)
         self.previous_monitor_button = QPushButton("Previous Monitor", self)
         input_layout.addWidget(self.previous_monitor_button)
-
-        # Add a "Previous Monitor" button
         self.next_monitor_button = QPushButton("Next Monitor", self)
         input_layout.addWidget(self.next_monitor_button)
-
-        # Set MouseTracking property of the button to False
         self.button.setMouseTracking(False)
-
-        # Add input_layout to the main layout
         layout.addLayout(input_layout)
-
-        # Connect the button's click event to a slot
         self.button.clicked.connect(self.handle_button_click)
-
-        # Connect the signal to a slot
         self.imageUpdateSignal = ImageLabelUpdateEvent()
         self.imageUpdateSignal.imageUpdated.connect(self.update_image_label)
         self.offset = 23
-
-        # Create and start the screenshot thread
         self.screenshot_thread = threading.Thread(target=self.update_screenshot_thread)
         self.screenshot_thread.start()
-
+        self.userinput.clicked.connect(self.toggle_control)
         self.setWindowTitle("Remote Desktop: " + str(self.window + 1))
         self.setMinimumSize(960 + self.offset, 540 + self.offset)
         self.next_monitor_button.clicked.connect(self.handle_next_monitor_click)
@@ -146,22 +135,26 @@ class ScreenshotWindow(QWidget):
         if self.monitor > 0:
             self.monitor -= 1
             self.my_window.bluepill.send(b"monitor->" + str(self.monitor).encode('utf-8'), self.my_window.connection[self.window])
-            
+    
+    def toggle_control(self):
+        if self.mouseactive:
+            self.mouseactive = False
+        else:
+            self.mouseactive = True
         
     def handle_button_click(self):
-        # Get the selected number from the spinner and print it
         selected_number = self.number_spinner.value()
         self.my_window.bluepill.send(b"quality->" + str(selected_number).encode('utf-8'), self.my_window.connection[self.window])
 
     def closeEvent(self, event):
         self.my_window.bluepill.send(b"stream", self.my_window.connection[self.window])
         self.active_stream = False
-        self.screenshot_thread.join()  # Wait for the screenshot thread to finish
+        self.screenshot_thread.join()
         event.accept()
         self.my_window.remote_window[self.window] = False
 
     def update_screenshot_thread(self):
-        last_stream = None  # Store the last observed stream
+        last_stream = None
         with mss.mss() as sct:
             while self.active_stream:
                 current_stream = self.my_window.stream[self.window]

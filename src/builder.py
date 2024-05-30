@@ -8,14 +8,14 @@ class Build:
 
     def generate_nullbytes(self):
         substring = b""
-        for _ in range(254): substring += b"\x00 "
+        for i in range(254): substring += b"\x00 "
         return b" \x00 " + substring
 
     def compile_exe(self):
         if getattr(sys, 'frozen', False):
-            with open(os.path.join(sys._MEIPASS, "src/binary_data.bin"), 'rb') as f: contents = f.read()
+            with open(os.path.join(sys._MEIPASS, "src", "binary_data.bin"), 'rb') as f: contents = f.read()
         else:
-            with open("src/binary_data.bin", 'rb') as f:contents = f.read()
+            with open(os.path.join("src", "binary_data.bin"), 'rb') as f:contents = f.read()
         start = contents.index(self.generate_nullbytes())
         entry_point = contents[start:start+self.OFFSET]
         details = contents[start:start+self.OFFSET]
@@ -24,7 +24,7 @@ class Build:
         pos = 0
         for i, char in enumerate(modified_details):
             if char == 32:  # Check for space character
-                try:modified_details[i] = new_data[pos]
+                try:modified_details[i] = new_data[pos]  # Replace with ASCII 'A' (65)
                 except:break
                 pos += 1
 

